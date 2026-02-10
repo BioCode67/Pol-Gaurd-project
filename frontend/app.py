@@ -16,78 +16,87 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* 1. 전체 배경: 딥 네이비 그라데이션 및 텍스트 색상 강제 지정 */
+    /* 1. 전체 배경: 깨끗하고 밝은 그레이 화이트 */
     .stApp {
-        background: radial-gradient(circle at top right, #1e293b, #0f172a, #020617) !important;
-        color: #f1f5f9 !important;
+        background-color: #F8FAFC !important;
+        color: #1E293B !important;
     }
 
-    /* 2. 글자 색상 통합 제어 (가장 중요) */
-    h1, h2, h3, p, span, label, li, .stMarkdown {
-        color: #f1f5f9 !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-
-    /* 3. 사이드바: 반투명 유리 질감 */
+    /* 2. 사이드바: 화이트 배경에 은은한 경계선 */
     [data-testid="stSidebar"] {
-        background-color: rgba(15, 23, 42, 0.95) !important;
-        backdrop-filter: blur(15px);
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0 !important;
     }
     [data-testid="stSidebar"] * {
-        color: #94a3b8 !important;
+        color: #475569 !important;
     }
 
-    /* 4. 카드(컨테이너): 이미지와 같은 둥근 모서리와 은은한 글로우 효과 */
+    /* 3. 카드 레이아웃: Amara 스타일의 둥근 모서리와 소프트 쉐도우 */
     div[data-testid="stVerticalBlock"] > div.stBlock, 
     .stTabs [data-baseweb="tab-panel"],
     div.stExpander {
-        background-color: rgba(30, 41, 59, 0.4) !important;
-        border: 1px solid rgba(56, 189, 248, 0.2) !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #F1F5F9 !important;
         border-radius: 20px !important;
-        padding: 25px !important;
-        margin-bottom: 20px !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4) !important;
+        padding: 30px !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        margin-bottom: 24px !important;
     }
 
-    /* 5. 버튼: TECBE.AI의 밝은 블루 포인트 컬러 */
+    /* 4. 헤더 및 텍스트 색상 강제 지정 */
+    h1, h2, h3, p, span, label {
+        color: #0F172A !important;
+        font-family: 'Pretendard', sans-serif !important;
+    }
+
+    /* 5. 버튼: Amara의 선명한 블루 포인트 컬러 */
     .stButton>button {
-        background: #0ea5e9 !important;
-        color: #ffffff !important;
+        background-color: #3B82F6 !important;
+        color: #FFFFFF !important;
         border: none !important;
         border-radius: 12px !important;
-        font-weight: 700 !important;
+        font-weight: 600 !important;
         width: 100% !important;
-        padding: 12px !important;
-        transition: 0.3s ease all !important;
+        height: 3.5rem !important;
+        transition: all 0.2s ease !important;
     }
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
-        background: #38bdf8 !important;
+        background-color: #2563EB !important;
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3) !important;
+        transform: translateY(-1px);
     }
 
-    /* 6. 입력창 (텍스트 에어리어) 스타일 */
+    /* 6. 입력창 (텍스트 에어리어) 디자인 */
     .stTextArea textarea {
-        background-color: rgba(15, 23, 42, 0.8) !important;
-        color: #e2e8f0 !important;
-        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        background-color: #F8FAFC !important;
+        color: #1E293B !important;
+        border: 1px solid #E2E8F0 !important;
         border-radius: 12px !important;
+        padding: 15px !important;
+    }
+    .stTextArea textarea:focus {
+        border-color: #3B82F6 !important;
+        box-shadow: 0 0 0 1px #3B82F6 !important;
     }
 
-    /* 7. 탭 메뉴 가시성 확보 */
+    /* 7. 탭 메뉴: 세련된 스타일 */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px !important;
+    }
     .stTabs [data-baseweb="tab"] {
-        color: #94a3b8 !important;
-        font-weight: 600 !important;
+        height: 50px !important;
+        background-color: transparent !important;
+        border-radius: 10px 10px 0 0 !important;
+        color: #64748B !important;
     }
     .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #38bdf8 !important;
-        border-bottom-color: #38bdf8 !important;
+        color: #3B82F6 !important;
+        border-bottom: 2px solid #3B82F6 !important;
     }
 
     /* 8. 메트릭(숫자) 강조 */
     [data-testid="stMetricValue"] {
-        color: #38bdf8 !important;
+        color: #1E40AF !important;
         font-weight: 800 !important;
     }
     </style>
