@@ -1,6 +1,11 @@
 import streamlit as st
 import requests
 import plotly.graph_objects as go
+from ai_engine.processor import PolGuardProcessor
+
+# 전역 변수로 엔진 초기화
+if "engine" not in st.session_state:
+    st.session_state.engine = PolGuardProcessor()
 
 
 def show_detector():
@@ -21,16 +26,18 @@ def show_detector():
             "🔗 포함된 URL", placeholder="http://으로 시작하는 링크 주소"
         )
 
-        if st.button("🔍 Pol-Guard 전문 분석 실행"):
-            if not user_input:
-                st.warning("분석할 텍스트 내용을 입력해야 합니다.")
-            else:
-                with st.spinner("AI 가디언이 다차원 분석을 수행 중입니다..."):
-                    res = requests.post(
-                        "http://localhost:8000/analyze",
-                        json={"text": user_input, "url": url_input},
-                    ).json()
-                    st.session_state["last_res"] = res
+        if st.button("🚀 정밀 분석 시작"):
+        if not user_input and not url_input:
+            st.warning("내용을 입력해주세요.")
+        else:
+            with st.spinner('AI 가디언이 다차원 분석을 수행 중입니다...'):
+                try:
+                    # ⚠️ 수정 포인트: requests.post 대신 직접 함수 호출
+                    res = st.session_state.engine.analyze(user_input, url_input)
+                    st.session_state['last_res'] = res
+                    st.session_state['last_input'] = {"text": user_input, "url": url_input}
+                except Exception as e:
+                    st.error(f"AI 분석 중 오류 발생: {e}")
 
     with col2:
         if "last_res" in st.session_state:
