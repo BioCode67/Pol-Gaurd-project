@@ -72,7 +72,9 @@ def show_detector():
     with tab1:
         st.markdown("#### 📝 텍스트 기반 위협 탐지")
         input_text = st.text_area(
-            "메시지 전문 입력", placeholder="내용을 입력하세요...", height=150
+            "메시지 전문 입력",
+            placeholder="분석할 메시지 내용을 붙여넣으세요...",
+            height=150,
         )
         if st.button("🚀 메시지 분석 시작", key="btn_text", use_container_width=True):
             if input_text.strip():
@@ -106,7 +108,6 @@ def show_detector():
         if MIC_RECORDER_AVAILABLE:
             st.write("마이크 버튼을 눌러 즉시 녹음을 시작하고 AI 분석을 요청하세요.")
 
-            # 전역 변수를 확인한 후 안전하게 호출하여 NameError 방지
             audio_record = mic_recorder(
                 start_prompt="⏺️ 실시간 녹음 시작",
                 stop_prompt="⏹️ 녹음 중지 및 즉시 분석",
@@ -128,40 +129,68 @@ def show_detector():
                     process_voice_analysis(audio_bytes)
         else:
             st.warning(
-                "⚠️ 실시간 녹음 기능이 현재 비활성화 상태입니다. 라이브러리 설치가 필요합니다."
+                "⚠️ 실시간 녹음 기능이 현재 비활성화 상태입니다. 라이브러리(streamlit-mic-recorder) 설치가 필요합니다."
             )
 
 
 def process_voice_analysis(audio_data):
-    """음성 분석 공통 프로세스"""
+    """음성 분석 공통 프로세스 및 코덱 에러 대응"""
     progress_bar = st.progress(0)
     status_text = st.empty()
     wave_chart = st.empty()
 
-    with st.spinner("AI 신호 분석 및 텍스트 데이터 추출 중..."):
-        full_text = st.session_state.transcriber.transcribe(audio_data)
-        words = full_text.split()
+    with st.spinner("🎙️ AI 신호 분석 및 텍스트 데이터 추출 중..."):
+        try:
+            # 1. 음성 데이터를 텍스트로 변환 (STT)
+            full_text = st.session_state.transcriber.transcribe(audio_data)
 
-        for i in range(len(words)):
-            wave_chart.line_chart(np.random.randn(20))
-            status_text.markdown(f"**📡 데이터 모니터링:** {' '.join(words[:i+1])}")
-            danger_keywords = ["검찰", "계좌", "이체", "수사", "금감원", "대출"]
-            if any(kw in words[i] for kw in danger_keywords):
-                st.toast(f"🚨 위협 패턴 감지: {words[i]}", icon="⚠️")
-            progress_bar.progress((i + 1) / len(words))
-            time.sleep(0.1)
+            if not full_text or len(full_text.strip()) == 0:
+                st.error(
+                    "❌ 분석 실패: 음성에서 유효한 텍스트를 추출할 수 없습니다. (마이크 설정을 확인하세요)"
+                )
+                return
 
-    try:
-        res = st.session_state.engine.analyze(full_text)
-    except:
-        res = st.session_state.engine.analyze_text(full_text)
+            words = full_text.split()
 
-    save_report(res)
-    display_result(res, is_voice=True)
+            # 2. 실시간 모니터링 시뮬레이션
+            for i in range(len(words)):
+                wave_chart.line_chart(np.random.randn(20))
+                status_text.markdown(f"**📡 데이터 모니터링:** {' '.join(words[:i+1])}")
+
+                # 경찰청 권고 위험 키워드 탐지
+                danger_keywords = [
+                    "검찰",
+                    "계좌",
+                    "이체",
+                    "수사",
+                    "금감원",
+                    "대출",
+                    "명의",
+                ]
+                if any(kw in words[i] for kw in danger_keywords):
+                    st.toast(f"🚨 위협 패턴 감지: {words[i]}", icon="⚠️")
+
+                progress_bar.progress((i + 1) / len(words))
+                time.sleep(0.1)
+
+            # 3. LLM 엔진 최종 분석
+            try:
+                res = st.session_state.engine.analyze(full_text)
+            except:
+                res = st.session_state.engine.analyze_text(full_text)
+
+            save_report(res)
+            display_result(res, is_voice=True)
+
+        except Exception as e:
+            st.error(f"❌ 데이터 분석 중 오류 발생: {e}")
+            st.info(
+                "💡 mp4 파일의 경우 코덱 호환성 문제가 발생할 수 있습니다. wav나 mp3 파일을 권장합니다."
+            )
 
 
 def display_result(res, is_voice=False):
-    """분석 결과 시각화"""
+    """분석 결과 시각화 및 경찰청 신고 연동"""
     risk = res.get("risk_score", 0)
     color = "#EF4444" if risk >= 60 else "#F59E0B" if risk >= 30 else "#10B981"
     st.markdown("---")
@@ -189,6 +218,7 @@ def display_result(res, is_voice=False):
             ]
         ]
 
+        # 레이더 차트를 통한 위협 유형 시각화
         fig = go.Figure(
             data=go.Scatterpolar(
                 r=values + [values[0]],
@@ -201,11 +231,13 @@ def display_result(res, is_voice=False):
             polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
             showlegend=False,
             height=300,
+            margin=dict(t=30, b=30, l=30, r=30),
         )
         st.plotly_chart(fig, use_container_width=True)
 
+    # 🚨 고위험군 대응 조치
     if risk >= 60:
-        st.error("🚨 **즉각적인 대응이 필요합니다!**")
+        st.error("🚨 **즉각적인 대응이 필요합니다!** 지시된 계좌로 송금하지 마세요.")
         btn_c1, btn_c2 = st.columns(2)
         btn_c1.link_button(
             "📞 경찰청 신고 (112)", "https://www.police.go.kr", use_container_width=True

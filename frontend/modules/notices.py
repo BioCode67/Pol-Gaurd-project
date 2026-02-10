@@ -73,7 +73,7 @@ def show_notices():
             """
             <div style='background: white; padding: 15px; border-radius: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
                 <p style='font-weight: 700; margin-bottom: 10px; color: #1E293B; font-size: 14px;'>🎬 [금감원] 보이스피싱 유형과 대응방안</p>
-            </div>
+            </div>`11111111
         """,
             unsafe_allow_html=True,
         )
