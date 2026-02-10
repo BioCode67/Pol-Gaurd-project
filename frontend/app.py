@@ -16,51 +16,64 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* 1. 전체 배경색 (어두운 네이비 그레이) */
+    /* 1. 전체 배경: 딥 다크 블루 그라데이션 */
     .stApp {
-        background-color: #0d1117;
-        color: #e6edf3;
-    }
-    
-    /* 2. 사이드바 스타일 (더 어둡게) */
-    [data-testid="stSidebar"] {
-        background-color: #010409;
-        border-right: 1px solid #30363d;
-    }
-    
-    /* 3. 카드형 컨테이너 (배경보다 약간 밝은 색으로 입체감 부여) */
-    div.stBlock, div.stExpander, .stTabs [data-baseweb="tab-panel"] {
-        background-color: #161b22 !important;
-        border: 1px solid #30363d !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-        margin-bottom: 20px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    
-    /* 4. 텍스트 입력창 및 텍스트 영역 */
-    .stTextArea textarea, .stTextInput input {
-        background-color: #0d1117 !important;
-        color: #e6edf3 !important;
-        border: 1px solid #30363d !important;
-    }
-    
-    /* 5. 탭 메뉴 디자인 */
-    .stTabs [data-baseweb="tab-list"] {
-        background-color: transparent;
-    }
-    .stTabs [data-baseweb="tab"] {
-        color: #8b949e;
-    }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] {
-        color: #58a6ff;
-        border-bottom-color: #58a6ff;
+        background: radial-gradient(circle at top right, #1e293b, #0f172a, #020617);
+        color: #f1f5f9;
     }
 
-    /* 6. 메트릭(숫자) 스타일 */
+    /* 2. 사이드바: 반투명 유리 질감 */
+    [data-testid="stSidebar"] {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        backdrop-filter: blur(10px);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* 3. 카드(컨테이너): 이미지와 같은 둥근 모서리와 은은한 글로우 효과 */
+    div.stBlock, .stTabs [data-baseweb="tab-panel"] {
+        background-color: rgba(30, 41, 59, 0.5) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 24px !important;
+        padding: 24px !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        margin-bottom: 20px;
+    }
+
+    /* 4. 버튼: TECBE.AI의 밝은 블루 포인트 컬러 */
+    .stButton>button {
+        background: #38bdf8 !important;
+        color: #0f172a !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-weight: 800 !important;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+        color: #ffffff !important;
+    }
+
+    /* 5. 텍스트 가시성 및 폰트 스타일 */
+    h1, h2, h3 {
+        font-family: 'Inter', sans-serif;
+        letter-spacing: -0.02em;
+        color: #f8fafc !important;
+    }
+    
+    /* 6. 입력창 가독성 확보 */
+    .stTextArea textarea {
+        background-color: rgba(15, 23, 42, 0.8) !important;
+        color: #38bdf8 !important;
+        border: 1px solid rgba(56, 189, 248, 0.3) !important;
+        border-radius: 16px !important;
+    }
+
+    /* 7. 메트릭 강조 */
     [data-testid="stMetricValue"] {
-        color: #58a6ff !important;
-        font-weight: bold;
+        font-size: 2.2rem !important;
+        color: #38bdf8 !important;
     }
     </style>
     """,
