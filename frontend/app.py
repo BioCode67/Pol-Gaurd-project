@@ -2,6 +2,12 @@ import sys
 import os
 import streamlit as st
 
+try:
+    from streamlit_option_menu import option_menu
+
+    OPTION_MENU_AVAILABLE = True
+except ImportError:
+    OPTION_MENU_AVAILABLE = False
 # 1. 경로 설정 및 모듈 임포트
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -152,21 +158,38 @@ with st.sidebar:
     if os.path.exists(logo_path):
         st.image(logo_path, width=150)
     else:
-        st.markdown("### 🛡️ Pol-Guard")  # 로고 파일 없을 시 텍스트로 대체
+        st.markdown("### 🛡️ Pol-Guard")
         st.caption("All-in-One Security Platform")
-    selected = option_menu(
-        menu_title="Pol-Guard 센터",
-        options=[
-            "🤖 피싱 대응 AI 에이전트",  # 1순위: 에이전트
-            "🔍 메인 탐지기",  # 2순위: 탐지기
-            "📋 탐지 리포트 보관함",  # 3순위: 보관함
-            "🎓 보안 훈련소",  # 4순위: 훈련소
-            "📢 최신 보안 공지",  # 5순위: 공지
-        ],
-        icons=["robot", "search", "clipboard-data", "mortarboard", "megaphone"],
-        menu_icon="shield-shaded",
-        default_index=0,
-    )
+
+    # [🚀 핵심 해결] 임포트가 성공했을 때만 메뉴 실행
+    if OPTION_MENU_AVAILABLE:
+        selected = option_menu(
+            menu_title="Pol-Guard 센터",
+            options=[
+                "🤖 피싱 대응 AI 에이전트",
+                "🔍 메인 탐지기",
+                "📋 탐지 리포트 보관함",
+                "🎓 보안 훈련소",
+                "📢 최신 보안 공지",
+            ],
+            icons=["robot", "search", "clipboard-data", "mortarboard", "megaphone"],
+            menu_icon="shield-shaded",
+            default_index=0,
+        )
+    else:
+        # 라이브러리가 없을 경우 대체 메뉴 (표준 스트림릿 라디오 버튼)
+        st.error("메뉴 라이브러리가 로드되지 않았습니다.")
+        selected = st.radio(
+            "메뉴 선택",
+            [
+                "🤖 피싱 대응 AI 에이전트",
+                "🔍 메인 탐지기",
+                "📋 탐지 리포트 보관함",
+                "🎓 보안 훈련소",
+                "📢 최신 보안 공지",
+            ],
+        )
+
     st.markdown("---")
     st.caption("© 2026 Pol-Guard AI Project")
 
