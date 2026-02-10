@@ -1,68 +1,101 @@
 import streamlit as st
 import plotly.graph_objects as go
-from .reports import save_report
 import sys
 import os
 
-# 1. 경로 설정 (ai_engine 폴더를 인식하게 함)
+# 1. 경로 설정
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-# 2. 직접 AI 엔진 로직 임포트
+# 2. 필요한 모듈들 임포트
 try:
     from ai_engine.processor import PolGuardProcessor
-except ImportError:
-    st.error("❌ 시스템 경로 설정 오류: ai_engine 폴더를 찾을 수 없습니다.")
+    from ai_engine.voice_processor import VoiceTranscriber
+    from .reports import save_report
+except ImportError as e:
+    st.error(f"❌ 모듈 로드 오류: {e}")
 
 
-# 3. 분석 화면 구성 함수
 def show_detector():
-    # [중요] 세션 상태에 엔진이 없으면 즉시 초기화
+    # 엔진 및 음성처리기 초기화
     if "engine" not in st.session_state:
-        try:
-            st.session_state.engine = PolGuardProcessor()
-        except Exception as e:
-            st.error(f"❌ 엔진 초기화 실패: {e}")
-            return
+        st.session_state.engine = PolGuardProcessor()
+    if "transcriber" not in st.session_state:
+        st.session_state.transcriber = VoiceTranscriber()
 
-    st.title("🔍 실시간 스미싱 탐지 가디언")
-    st.info(
-        "💡 **전문가 팁**: 정부기관이나 은행은 절대로 010 번호로 링크를 보내지 않습니다."
-    )
+    st.title("🔍 실시간 스미싱/보이스피싱 탐지")
 
-    col1, col2 = st.columns([1, 1])
+    # 탭 메뉴 구성 (텍스트 분석 / 음성 분석)
+    tab1, tab2 = st.tabs(["💬 문자/카톡 분석", "🎙️ 통화 녹음 분석"])
 
-    with col1:
-        st.markdown("### 📥 정밀 분석 요청")
-        user_input = st.text_area(
-            "메시지 전문",
-            placeholder="수신한 문자의 전체 내용을 복사해 붙여넣으세요...",
-            height=200,
-            key="input_text",
-        )
-        url_input = st.text_input("🔗 포함된 URL (선택사항)", placeholder="http://...")
-
-        if st.button("🚀 정밀 분석 시작", use_container_width=True):
-            if not user_input.strip():
-                st.warning("분석할 텍스트를 입력해주세요.")
-            else:
-                with st.spinner("Llama-3.3 엔진이 다차원 분석을 수행 중입니다..."):
-                    try:
-                        # st.session_state에 저장된 엔진을 사용하여 직접 분석
-                        res = st.session_state.engine.analyze(user_input, url_input)
+    # --- 탭 1: 텍스트 분석 ---
+    with tab1:
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.markdown("### 📥 메시지 분석")
+            user_input = st.text_area(
+                "메시지 전문",
+                placeholder="내용을 입력하세요...",
+                height=150,
+                key="txt_input",
+            )
+            if st.button("🚀 메시지 분석 시작", use_container_width=True):
+                if user_input.strip():
+                    with st.spinner("AI 분석 중..."):
+                        res = st.session_state.engine.analyze(user_input)
                         st.session_state["last_res"] = res
                         save_report(res)
-                    except Exception as e:
-                        st.error(f"⚠️ 분석 엔진 오류: {e}")
+                else:
+                    st.warning("텍스트를 입력해주세요.")
 
-    with col2:
-        if "last_res" in st.session_state:
-            res = st.session_state["last_res"]
+    # --- 탭 2: 음성 분석 (주형 님이 원하신 공간!) ---
+    with tab2:
+        st.markdown("### 📥 통화 녹음 파일 분석")
+        audio_file = st.file_uploader(
+            "녹음 파일 업로드 (mp3, wav, m4a)", type=["mp3", "wav", "m4a"]
+        )
+
+        if audio_file is not None:
+            st.audio(audio_file)
+            if st.button("🎤 음성 인식 및 분석 시작", use_container_width=True):
+                with st.spinner("음성을 텍스트로 변환하고 있습니다..."):
+                    # 1. STT 실행
+                    transcribed_text = st.session_state.transcriber.transcribe(
+                        audio_file
+                    )
+
+                    if "❌" in transcribed_text:  # 에러 발생 시
+                        st.error(transcribed_text)
+                    else:
+                        st.success("✅ 음성 인식 성공!")
+                        st.info(f"**변환된 내용:** {transcribed_text}")
+
+                        # 2. 변환된 텍스트로 AI 분석 실행
+                        with st.spinner("AI가 위험도를 분석 중입니다..."):
+                            res = st.session_state.engine.analyze(transcribed_text)
+                            st.session_state["last_res"] = res
+                            save_report(res)
+
+    # --- 공통 결과 표시 구역 (차트 및 리포트) ---
+    if "last_res" in st.session_state:
+        st.markdown("---")
+        res = st.session_state["last_res"]
+
+        c_left, c_right = st.columns([1, 1])
+
+        with c_left:
+            # 위험도 수치 및 판정
+            risk = res.get("risk_score", 0)
+            color = "red" if risk >= 60 else "orange" if risk >= 30 else "green"
+            st.subheader(f"종합 판정: :{color}[{res.get('verdict', '분석 불가')}]")
+            st.metric("위험 점수", f"{risk}%")
+            st.write(f"**🕵️ 분석 근거:** {res.get('ai_analysis', '내용 없음')}")
+
+        with c_right:
+            # 레이더 차트 시각화
             f = res.get("factors", {})
-
-            # 전문가용 레이더 차트 구성
             categories = [
                 "금전유도",
                 "기관사칭",
@@ -78,49 +111,17 @@ def show_detector():
                 f.get("blacklist_match", 0),
             ]
 
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatterpolar(
+            fig = go.Figure(
+                data=go.Scatterpolar(
                     r=values + [values[0]],
                     theta=categories + [categories[0]],
                     fill="toself",
                     line_color="#FF4B4B",
-                    fillcolor="rgba(255, 75, 75, 0.3)",
                 )
             )
             fig.update_layout(
                 polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
-                margin=dict(l=40, r=40, t=20, b=20),
+                showlegend=False,
+                margin=dict(l=20, r=20, t=20, b=20),
             )
             st.plotly_chart(fig, use_container_width=True)
-
-    # 하단 판정 결과 리포트
-    if "last_res" in st.session_state:
-        res = st.session_state["last_res"]
-        st.markdown("---")
-
-        # 위험도에 따른 색상 결정
-        risk = res.get("risk_score", 0)
-        color = "red" if risk >= 60 else "orange" if risk >= 30 else "green"
-
-        st.markdown(
-            f"### 📑 AI 종합 판정 리포트: :{color}[{res.get('verdict', '분석 중')}]"
-        )
-
-        c1, c2, c3 = st.columns(3)
-        c1.metric("종합 위험도", f"{risk}%")
-        c2.metric("위험 유형", res.get("intent", "기타"))
-        c3.metric("데이터 엔진", "Llama-3.3 70B")
-
-        if "ai_analysis" in res:
-            st.warning(f"**🕵️ 분석 근거:** {res['ai_analysis']}")
-
-        with st.expander("📝 대응 가이드라인 (보안 전문가 제언)"):
-            if risk >= 60:
-                st.error(
-                    "🚨 **즉시 대응 필요**\n- 해당 번호를 스팸으로 신고 및 차단하십시오.\n- 링크를 클릭했다면 스마트폰 백신을 돌리고 '시티즌코난' 앱을 실행하세요."
-                )
-            else:
-                st.success(
-                    "✅ **주의 사항**\n- 현재로서는 큰 위협이 발견되지 않았습니다.\n- 하지만 모르는 번호의 링크는 항상 의심하는 습관이 중요합니다."
-                )
