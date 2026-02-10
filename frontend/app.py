@@ -199,7 +199,10 @@ st.markdown(
     <div class="hero-container">
         <div>
             <span class="hero-title-main">피싱·스캠으로부터 안전한 나라, 경찰청과 Pol-Guard가 함께 만듭니다 👋</span>
-            <p style="color:#64748B; margin:5px 0 0 0; font-size:14px;">현재 {selected} 시스템이 최적화 상태로 가동 중입니다.</p>
+            <p style="color:#64748B; margin:8px 0 0 0; font-size:14.5px; line-height:1.5;">
+                경찰청 사이버수사국의 범죄 데이터와 실시간 AI 분석 기술을 결합하여<br>
+                국민의 소중한 일상을 디지털 위협으로부터 24시간 밀착 보호합니다.
+            </p>
         </div>
         <div class="hero-tag">
             Engine: Llama-3.3-70B Active
