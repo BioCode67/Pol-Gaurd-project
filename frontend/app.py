@@ -166,11 +166,11 @@ with st.sidebar:
         selected = option_menu(
             menu_title="Pol-Guard 센터",
             options=[
-                "🤖 피싱 대응 AI 에이전트",
-                "🔍 메인 탐지기",
-                "📋 탐지 리포트 보관함",
-                "🎓 보안 훈련소",
-                "📢 최신 보안 공지",
+                " 피싱 대응 AI 에이전트",
+                " 메인 탐지기",
+                " 탐지 리포트 보관함",
+                " 보안 훈련소",
+                " 최신 보안 공지",
             ],
             icons=["robot", "search", "clipboard-data", "mortarboard", "megaphone"],
             menu_icon="shield-shaded",
