@@ -16,6 +16,7 @@ try:
     from .reports import save_report
 except ImportError as e:
     st.error(f"❌ 모듈 로드 오류: {e}")
+    print(f"Import Error details: {e}")
 
 
 def show_detector():
