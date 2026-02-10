@@ -85,6 +85,7 @@ class PolGuardProcessor:
 
         try:
             # 모델명을 llama3-8b-8192에서 llama-3.3-70b-versatile로 변경
+            print("--- 현재 모델 호출 시도 중: llama-3.3-70b-versatile ---")  # 추가
             chat_completion = self.client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
                 model="llama-3.3-70b-versatile",
