@@ -1,126 +1,101 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 from datetime import datetime
 
 
 def show_notices():
-    st.markdown("### 📡 실시간 보안 위협 인텔리전스 (KISA/경찰청 연동)")
-    st.write(
-        "외부 보안 전문 기관의 실시간 피드를 수집하여 최신 피싱 위협 정보를 제공합니다."
+    st.markdown("### 📡 실시간 위협 인텔리전스 & 미디어 피드")
+    st.write("외부 보안 전문 기관의 실시간 정보와 최신 예방 교육 영상을 제공합니다.")
+
+    # --- 1. 위협 현황 브리핑 ---
+    st.markdown("#### 📊 금주 주요 위협 지표")
+    threat_stats = pd.DataFrame(
+        {
+            "유형": ["보이스피싱", "스미싱(SMS)", "메신저피싱", "기타 스캠"],
+            "발생건수": [124, 452, 89, 45],
+        }
     )
 
-    # --- 1. 실시간 데이터 수집 상태 표시 (시뮬레이션) ---
-    with st.status("외부 데이터 동기화 중...", expanded=False) as status:
-        st.write("KISA 보안 공지 서버 연결... ✅")
-        st.write("경찰청 사이버수사국 보도자료 분석... ✅")
-        st.write("최신 스미싱 키워드 DB 갱신... ✅")
-        status.update(
-            label="실시간 위협 정보 동기화 완료", state="complete", expanded=False
+    m1, m2, m3 = st.columns([1.5, 1, 1])
+    with m1:
+        fig = px.pie(
+            threat_stats,
+            values="발생건수",
+            names="유형",
+            hole=0.6,
+            color_discrete_sequence=px.colors.sequential.Blues_r,
         )
-
-    # --- 2. 검색 및 위험 등급 필터 ---
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        search_query = st.text_input(
-            "🔍 위협 키워드 검색", placeholder="예: 연말정산, 결제, 수사기관..."
-        )
-    with col2:
-        filter_level = st.selectbox(
-            "위험 등급", ["전체", "🚨 긴급", "⚠️ 주의", "ℹ️ 정보"]
-        )
+        fig.update_layout(margin=dict(t=0, b=0, l=0, r=0), height=180, showlegend=True)
+        st.plotly_chart(fig, use_container_width=True)
+    with m2:
+        st.metric("오늘의 위험 등급", "⚠️ 주의", delta="+12%", delta_color="inverse")
+    with m3:
+        st.metric("주요 키워드", "연말정산")
 
     st.markdown("---")
 
-    # --- 3. 고도화된 보안 공지 데이터 (실제 데이터 형태 모사) ---
-    notices_data = [
-        {
-            "level": "🚨 긴급",
-            "title": "국세청 연말정산 환급금 사칭 스미싱 기승",
-            "date": "2026-02-11",
-            "source": "KISA 보안공지",
-            "desc": "환급금 확인을 위해 특정 URL 클릭을 유도하며, 클릭 시 좀비폰 악성 앱이 설치됩니다.",
-            "guide": "국세청 홈택스 공식 앱을 통해서만 환급 정보를 확인하세요.",
-            "link": "https://www.boho.or.kr",
-        },
-        {
-            "level": "⚠️ 주의",
-            "title": "안드로이드 보안 업데이트 권고 (Zero-day 취약점)",
-            "date": "2026-02-10",
-            "source": "Android Security",
-            "desc": "이미지 파일 실행만으로 기기 권한이 탈취되는 취약점이 발견되었습니다. 즉시 업데이트가 필요합니다.",
-            "guide": "설정 > 소프트웨어 업데이트에서 최신 버전으로 갱신하세요.",
-            "link": "https://source.android.com/security/bulletin",
-        },
-        {
-            "level": "ℹ️ 정보",
-            "title": "Pol-Guard AI 피싱 패턴 DB 정기 업데이트",
-            "date": "2026-02-09",
-            "source": "내부 공지",
-            "desc": "변종 보이스피싱 스크립트 500여 건이 AI 학습 데이터에 추가되었습니다.",
-            "guide": "최신 분석 정확도가 약 2.4% 향상되었습니다.",
-            "link": "#",
-        },
-    ]
+    # --- 2. [신규] 최신 예방 교육 영상 섹션 ---
+    st.markdown("#### 📺 실시간 보안 브리핑 및 예방 영상")
+    v_col1, v_col2 = st.columns(2)
 
-    # --- 4. Amara 스타일 리스트 렌더링 ---
-    for note in notices_data:
-        # 필터링 로직
-        if filter_level != "전체" and note["level"] != filter_level:
-            continue
-        if search_query and search_query not in note["title"]:
-            continue
-
-        bg_color = (
-            "#FEF2F2"
-            if "긴급" in note["level"]
-            else "#FFFBEB" if "주의" in note["level"] else "#F0F9FF"
-        )
-        border_color = (
-            "#EF4444"
-            if "긴급" in note["level"]
-            else "#F59E0B" if "주의" in note["level"] else "#3B82F6"
-        )
-        text_color = (
-            "#991B1B"
-            if "긴급" in note["level"]
-            else "#92400E" if "주의" in note["level"] else "#1E40AF"
-        )
-
+    with v_col1:
         st.markdown(
-            f"""
-            <div style='background-color: {bg_color}; border-left: 5px solid {border_color}; padding: 25px; border-radius: 16px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);'>
-                <div style='display: flex; justify-content: space-between; align-items: center;'>
-                    <span style='background-color: {border_color}; color: white; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 800;'>{note["level"]}</span>
-                    <small style='color: #64748B;'>{note["date"]} | {note["source"]}</small>
-                </div>
-                <h4 style='color: {text_color}; margin: 15px 0 10px 0;'>{note["title"]}</h4>
-                <p style='color: #334155; font-size: 14px; line-height: 1.6;'>{note["desc"]}</p>
+            """
+            <div style='background: white; padding: 15px; border-radius: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
+                <p style='font-weight: 700; margin-bottom: 10px; color: #1E293B;'>🎬 [경찰청] 보이스피싱 실제 범행 음성</p>
             </div>
         """,
             unsafe_allow_html=True,
         )
+        # 실제 경찰청 홍보 영상이나 관련 시뮬레이션 영상 주소를 넣으세요
+        st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
-        with st.expander("🛡️ 피해 방지 행동 수칙"):
-            st.info(note["guide"])
-            if note["link"] != "#":
-                st.link_button("🔗 원문 자료 확인하기", note["link"])
-
-    # --- 5. 실시간 피싱 키워드 클라우드 (추가 고도화) ---
-    st.markdown("---")
-    st.subheader("🔥 실시간 급상승 피싱 키워드")
-    st.write("현재 가장 많이 수집되는 피싱 문자 내 키워드입니다.")
-
-    keywords = [
-        "#환급금",
-        "#과태료",
-        "#배송지오류",
-        "#수사관사칭",
-        "#대출심사",
-        "#인증번호",
-    ]
-    cols = st.columns(len(keywords))
-    for i, kw in enumerate(keywords):
-        cols[i].markdown(
-            f"<span style='background:#E2E8F0; padding:5px 10px; border-radius:20px; font-size:12px; font-weight:600;'>{kw}</span>",
+    with v_col2:
+        st.markdown(
+            """
+            <div style='background: white; padding: 15px; border-radius: 16px; border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>
+                <p style='font-weight: 700; margin-bottom: 10px; color: #1E293B;'>🎬 [금감원] 스미싱 예방 수칙 가이드</p>
+            </div>
+        """,
             unsafe_allow_html=True,
         )
+        st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+
+    st.markdown("---")
+
+    # --- 3. 고도화된 보안 공지 카드 (Amara 스타일) ---
+    notices_data = [
+        {
+            "level": "🚨 긴급(Critical)",
+            "title": "국세청 연말정산 환급금 안내 사칭 스미싱 대량 유포",
+            "date": "2026-02-11",
+            "source": "KISA 보안공지",
+            "desc": "환급금 신청을 유도하는 URL 클릭 시 악성 앱이 설치되어 자산이 탈취될 수 있습니다.",
+            "guide": "국세청 공식 앱을 통해서만 환급 정보를 확인하세요.",
+            "link": "https://www.boho.or.kr",
+        }
+    ]
+
+    for note in notices_data:
+        is_critical = "🚨" in note["level"]
+        theme_color = "#EF4444" if is_critical else "#F59E0B"
+        bg_color = "#FEF2F2" if is_critical else "#FFFBEB"
+
+        st.markdown(
+            f"""
+            <div style='background-color: {bg_color}; border-left: 6px solid {theme_color}; padding: 25px; border-radius: 16px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);'>
+                <div style='display: flex; justify-content: space-between;'>
+                    <div style='background-color: {theme_color}; color: white; padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800;'>{note["level"]}</div>
+                    <small style='color: #64748B;'>{note["date"]} | {note["source"]}</small>
+                </div>
+                <h4 style='color: #0F172A; margin: 15px 0 10px 0;'>{note["title"]}</h4>
+                <p style='color: #334155; font-size: 14px;'>{note["desc"]}</p>
+                <div style='background: white; padding: 12px; border-radius: 8px; border: 1px dashed {theme_color};'>
+                    <span style='color: {theme_color}; font-weight: 700;'>✅ 대응:</span> {note["guide"]}
+                </div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
+        st.link_button(f"🔗 원문 자료 확인하기", note["link"], use_container_width=True)
