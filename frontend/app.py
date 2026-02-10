@@ -198,7 +198,7 @@ st.markdown(
     f"""
     <div class="hero-container">
         <div>
-            <span class="hero-title-main">Welcome back, 주형님 👋</span>
+            <span class="hero-title-main">피싱·스캠으로부터 안전한 나라, 경찰청과 Pol-Guard가 함께 만듭니다 👋</span>
             <p style="color:#64748B; margin:5px 0 0 0; font-size:14px;">현재 {selected} 시스템이 최적화 상태로 가동 중입니다.</p>
         </div>
         <div class="hero-tag">
