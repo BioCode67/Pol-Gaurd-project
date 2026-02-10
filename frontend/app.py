@@ -82,7 +82,12 @@ with st.sidebar:
     st.markdown("---")
     menu = st.radio(
         "서비스 메뉴",
-        ["🏠 메인 탐지기", "📊 분석 대시보드", "🎓 보안 아카데미", "📢 공지사항"],
+        [
+            "🏠 메인 탐지기",
+            "🎓 Pol-Academy",
+            "📋 탐지 리포트 보관함",
+            "📢 최신 보안 공지",
+        ],
         index=0,
     )
     st.markdown("---")
