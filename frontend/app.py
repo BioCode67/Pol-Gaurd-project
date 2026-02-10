@@ -166,11 +166,11 @@ with st.sidebar:
         selected = option_menu(
             menu_title="Pol-Guard 센터",
             options=[
-                "🤖 피싱 대응 AI 에이전트",
-                "🔍 메인 탐지기",
-                "📋 탐지 리포트 보관함",
-                "🎓 보안 훈련소",
-                "📢 최신 보안 공지",
+                " 피싱 대응 AI 에이전트",
+                " 메인 탐지기",
+                " 탐지 리포트 보관함",
+                " 보안 훈련소",
+                " 최신 보안 공지",
             ],
             icons=["robot", "search", "clipboard-data", "mortarboard", "megaphone"],
             menu_icon="shield-shaded",
@@ -182,11 +182,11 @@ with st.sidebar:
         selected = st.radio(
             "메뉴 선택",
             [
-                "🤖 피싱 대응 AI 에이전트",
-                "🔍 메인 탐지기",
-                "📋 탐지 리포트 보관함",
-                "🎓 보안 훈련소",
-                "📢 최신 보안 공지",
+                " 피싱 대응 AI 에이전트",
+                " 메인 탐지기",
+                " 탐지 리포트 보관함",
+                " 보안 훈련소",
+                " 최신 보안 공지",
             ],
         )
 
@@ -199,7 +199,7 @@ st.markdown(
     <div class="hero-container">
         <div>
             <span class="hero-title-main">Welcome back, 주형님 👋</span>
-            <p style="color:#64748B; margin:5px 0 0 0; font-size:14px;">현재 {selected[2:]} 시스템이 최적화 상태로 가동 중입니다.</p>
+            <p style="color:#64748B; margin:5px 0 0 0; font-size:14px;">현재 {selected} 시스템이 최적화 상태로 가동 중입니다.</p>
         </div>
         <div class="hero-tag">
             Engine: Llama-3.3-70B Active
@@ -210,13 +210,13 @@ st.markdown(
 )
 
 # 6. 페이지 라우팅
-if selected == "🤖 피싱 대응 AI 에이전트":
+if selected == " 피싱 대응 AI 에이전트":
     show_ai_agent()  # 신규 에이전트 페이지 호출
-elif selected == "🔍 메인 탐지기":
+elif selected == " 메인 탐지기":
     show_detector()
-elif selected == "📋 탐지 리포트 보관함":
+elif selected == " 탐지 리포트 보관함":
     show_reports()
-elif selected == "🎓 보안 훈련소":
+elif selected == " 보안 훈련소":
     show_academy()
-elif selected == "📢 최신 보안 공지":
+elif selected == " 최신 보안 공지":
     show_notices()
