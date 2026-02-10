@@ -55,11 +55,17 @@ def show_detector():
     with tab2:
         st.markdown("### 📥 통화 녹음 파일 분석")
         audio_file = st.file_uploader(
-            "녹음 파일 업로드 (mp3, wav, m4a)", type=["mp3", "wav", "m4a"]
+            audio_file=st.file_uploader(
+                "파일 업로드 (mp3, wav, m4a, mp4)", type=["mp3", "wav", "m4a", "mp4"]
+            )
         )
 
         if audio_file is not None:
-            st.audio(audio_file)
+            # 영상 파일일 경우 화면에 플레이어를 표시
+            if audio_file.name.endswith("mp4"):
+                st.video(audio_file)
+            else:
+                st.audio(audio_file)
             if st.button("🎤 음성 인식 및 분석 시작", use_container_width=True):
                 with st.spinner("음성을 텍스트로 변환하고 있습니다..."):
                     # 1. STT 실행
