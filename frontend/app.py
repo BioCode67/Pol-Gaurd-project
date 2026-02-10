@@ -5,9 +5,11 @@ import streamlit as st
 # 1. 경로 설정 및 모듈 임포트
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# 각 기능 모듈 임포트
+from modules.ai_agent import show_ai_agent
 from modules.detector import show_detector
-from modules.academy import show_academy
 from modules.reports import show_reports
+from modules.academy import show_academy
 from modules.notices import show_notices
 
 # 2. 페이지 설정 (Amara 스타일의 넓은 레이아웃)
@@ -146,7 +148,12 @@ st.markdown(
 
 # 4. 사이드바 구성 (Amara 스타일 메뉴)
 with st.sidebar:
-    st.image("assets/logo.png", width=150)
+    logo_path = "assets/logo.png"
+    if os.path.exists(logo_path):
+        st.image(logo_path, width=150)
+    else:
+        st.markdown("### 🛡️ Pol-Guard")  # 로고 파일 없을 시 텍스트로 대체
+        st.caption("All-in-One Security Platform")
     selected = option_menu(
         menu_title="Pol-Guard 센터",
         options=[
