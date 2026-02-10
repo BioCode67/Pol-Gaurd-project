@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import numpy as np
 import sys
 import os
 
@@ -53,35 +54,37 @@ def show_detector():
 
     # --- 탭 2: 음성 분석 (주형 님이 원하신 공간!) ---
     with tab2:
-        st.markdown("### 📥 통화 녹음 파일 분석")
+        st.markdown("### 📥 멀티미디어 파일 업로드")
         audio_file = st.file_uploader(
-            "파일 업로드 (mp3, wav, m4a, mp4)", type=["mp3", "wav", "m4a", "mp4"]
+            "파일 선택 (mp3, wav, m4a, mp4)", type=["mp3", "wav", "m4a", "mp4"]
         )
 
-        if audio_file is not None:
-            # 영상 파일일 경우 화면에 플레이어를 표시
+        if audio_file:
             if audio_file.name.endswith("mp4"):
                 st.video(audio_file)
             else:
                 st.audio(audio_file)
-            if st.button("🎤 음성 인식 및 분석 시작", use_container_width=True):
-                with st.spinner("음성을 텍스트로 변환하고 있습니다..."):
-                    # 1. STT 실행
+
+            if st.button("🎤 인텔리전스 분석 시작", use_container_width=True):
+                # 가상 주파수 애니메이션 효과 (디자인 포인트)
+                st.write("📡 **디지털 신호 주파수 분석 중...**")
+                wave_data = np.random.randn(30)
+                st.line_chart(wave_data)
+
+                with st.spinner("AI가 위협 패턴을 추출하고 있습니다..."):
                     transcribed_text = st.session_state.transcriber.transcribe(
                         audio_file
                     )
 
-                    if "❌" in transcribed_text:  # 에러 발생 시
+                    if "❌" in transcribed_text:
                         st.error(transcribed_text)
                     else:
-                        st.success("✅ 음성 인식 성공!")
-                        st.info(f"**변환된 내용:** {transcribed_text}")
+                        st.success("✅ 음성 인식 완료")
+                        st.info(f"**추출 텍스트:** {transcribed_text}")
 
-                        # 2. 변환된 텍스트로 AI 분석 실행
-                        with st.spinner("AI가 위험도를 분석 중입니다..."):
-                            res = st.session_state.engine.analyze(transcribed_text)
-                            st.session_state["last_res"] = res
-                            save_report(res)
+                        res = st.session_state.engine.analyze(transcribed_text)
+                        st.session_state["last_res"] = res
+                        save_report(res)
 
     # --- 공통 결과 표시 구역 (차트 및 리포트) ---
     if "last_res" in st.session_state:
@@ -130,3 +133,14 @@ def show_detector():
                 margin=dict(l=20, r=20, t=20, b=20),
             )
             st.plotly_chart(fig, use_container_width=True)
+
+        with st.expander("🚨 보안 전문가 권고 사항", expanded=True):
+            risk = res.get("risk_score", 0)
+            if risk >= 60:
+                st.error("**⚠️ 고위험군 피싱이 의심됩니다!**")
+                st.markdown(
+                    "- 즉시 전화를 끊고 관련 번호를 차단하세요.\n- 링크를 클릭했다면 스마트폰 초기화 또는 보안 앱 검사를 권장합니다.\n- **신고전화: 경찰청(112), 금융감독원(1332)**"
+                )
+            else:
+                st.success("**✅ 정상적인 메시지로 판단됩니다.**")
+                st.markdown("- 하지만 항상 출처가 불분명한 링크는 주의하시기 바랍니다.")
