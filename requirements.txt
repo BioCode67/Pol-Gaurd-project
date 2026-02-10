@@ -8,3 +8,4 @@ SpeechRecognition  # 구글 무료 엔진 사용을 위해 추가
 pydub             # 음성 파일 포맷 변환용
 python-dotenv
 streamlit-mic-recorder
+feedparser
