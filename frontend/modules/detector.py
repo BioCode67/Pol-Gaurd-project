@@ -191,9 +191,6 @@ def process_voice_analysis(audio_data):
 
 def display_result(res, is_voice=False):
     """분석 결과 시각화: ValueError 해결 및 데이터 매핑 보정 버전"""
-    # [💡 디버깅용] 만약 점수가 계속 안 나오면 아래 주석을 해제해서 데이터 구조를 확인하세요.
-    # st.write("AI 엔진 반환 데이터:", res)
-
     # 1. 점수 로드 및 100분율 보정
     risk = res.get("risk_score", 0)
     if 0 < risk <= 1.0:
@@ -201,7 +198,7 @@ def display_result(res, is_voice=False):
 
     color = "#EF4444" if risk >= 60 else "#F59E0B" if risk >= 30 else "#10B981"
 
-    # [🚨 핵심 해결] Plotly가 안전하게 인식하는 RGBA 색상 맵핑
+    # [🚨 핵심 해결] Plotly가 안전하게 인식하는 RGBA 색상 직접 매핑
     rgba_map = {
         "#EF4444": "rgba(239, 68, 68, 0.3)",  # 고위험 (Red)
         "#F59E0B": "rgba(245, 158, 11, 0.3)",  # 주의 (Orange)
@@ -231,19 +228,20 @@ def display_result(res, is_voice=False):
             for k in key_list:
                 v = factors.get(k)
                 if v is not None:
+                    # 0.95 같은 소수점 데이터가 들어올 경우 100을 곱함
                     return v * 100 if 0 < v <= 1.0 else v
             return 0
 
-        # AI 엔진의 실제 반환 키에 맞춰 매핑 (필요 시 엔진 코드를 보고 키 이름을 수정하세요)
+        # AI 엔진의 실제 반환 키에 맞춰 매핑 (다양한 키 이름을 탐색)
         values = [
-            get_val(["content_risk", "financial_risk"]),
-            get_val(["context_risk", "authority_risk"]),
-            get_val(["urgency_risk", "psychological_risk"]),
-            get_val(["pattern_match", "ai_score"]),
-            get_val(["blacklist_match", "db_score"]),
+            get_val(["content_risk", "financial_inducement", "financial_risk"]),
+            get_val(["context_risk", "authority_impersonation", "authority_risk"]),
+            get_val(["urgency_risk", "psychological_pressure", "psychological_risk"]),
+            get_val(["pattern_match", "ai_pattern", "ai_score"]),
+            get_val(["blacklist_match", "database_match", "db_score"]),
         ]
 
-        # 레이더 차트 생성 (Fixed logic)
+        # 레이더 차트 생성 (Fixed Logic)
         fig = go.Figure()
         fig.add_trace(
             go.Scatterpolar(
@@ -270,88 +268,6 @@ def display_result(res, is_voice=False):
         st.plotly_chart(fig, use_container_width=True)
 
     # 🚨 고위험군 대응 조치
-    if risk >= 60:
-        st.error("🚨 **즉각적인 대응이 필요합니다!**")
-        c1, c2 = st.columns(2)
-        c1.link_button(
-            "📞 경찰청 신고 (112)", "https://www.police.go.kr", use_container_width=True
-        )
-        c2.link_button(
-            "🏦 금감원 신고 (1332)", "https://fss.or.kr", use_container_width=True
-        )
-    """분석 결과 시각화 및 점수 로드 보정"""
-    # 1. 전체 데이터 구조 확인 (개발 단계에서 키 이름을 확인하기 위해 주석을 해제하고 확인하세요)
-    # st.write("전체 데이터 구조:", res)
-
-    risk = res.get("risk_score", 0)
-    # 만약 점수가 0~1 사이 소수점(0.95)으로 들어오면 100을 곱함
-    if 0 < risk <= 1.0:
-        risk = int(risk * 100)
-
-    color = "#EF4444" if risk >= 60 else "#F59E0B" if risk >= 30 else "#10B981"
-
-    st.markdown("---")
-    st.markdown(
-        f"#### 종합 분석 판정: <span style='color:{color}'>{res.get('verdict', '판정 불가')}</span>",
-        unsafe_allow_html=True,
-    )
-
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.metric("위험 점수", f"{risk}%")
-        st.info(
-            f"**🕵️ AI 정밀 진단:**\n\n{res.get('ai_analysis', '분석 내용을 불러올 수 없습니다.')}"
-        )
-
-    with col2:
-        # [🚨 핵심 해결] 엔진에서 내려주는 실제 데이터 키값 매핑
-        factors = res.get("factors", {})
-
-        # 엔진에 따라 키 이름이 다를 수 있으므로 여러 경우를 대비
-        # 만약 차트가 계속 안 뜬다면 st.write(factors)로 키 이름을 꼭 확인해보세요.
-        categories = ["금전유도", "기관사칭", "심리압박", "패턴일치", "블랙리스트"]
-
-        # 각 카테고리별 데이터를 안전하게 가져오기 (0~100으로 자동 변환)
-        def get_score(key_list):
-            for k in key_list:
-                val = factors.get(k)
-                if val is not None:
-                    return val * 100 if 0 < val <= 1.0 else val
-            return 0
-
-        values = [
-            get_score(["content_risk", "financial_inducement"]),
-            get_score(["context_risk", "authority_impersonation"]),
-            get_score(["urgency_risk", "psychological_pressure"]),
-            get_score(["pattern_match", "ai_pattern"]),
-            get_score(["blacklist_match", "database_match"]),
-        ]
-
-        # 레이더 차트 생성
-        fig = go.Figure(
-            data=go.Scatterpolar(
-                r=values + [values[0]],
-                theta=categories + [categories[0]],
-                fill="toself",
-                fillcolor=f"{color}33",  # 채우기 색상 투명도
-                line_color=color,
-            )
-        )
-
-        fig.update_layout(
-            polar=dict(
-                radialaxis=dict(visible=True, range=[0, 100], gridcolor="#E2E8F0"),
-                angularaxis=dict(gridcolor="#E2E8F0"),
-            ),
-            showlegend=False,
-            height=350,
-            margin=dict(t=40, b=40, l=40, r=40),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    # 고위험군 버튼 처리
     if risk >= 60:
         st.error("🚨 **즉각적인 대응이 필요합니다!** 지시된 계좌로 송금하지 마세요.")
         c1, c2 = st.columns(2)
