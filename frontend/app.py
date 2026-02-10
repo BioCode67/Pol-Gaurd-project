@@ -180,11 +180,13 @@ st.markdown(
 )
 
 # 6. 페이지 라우팅
-if menu == "🏠 Dashboard":
+if selected == "🤖 피싱 대응 AI 에이전트":
+    show_ai_agent()  # 신규 에이전트 페이지 호출
+elif selected == "🔍 메인 탐지기":
     show_detector()
-elif menu == "🎓 Academy":
-    show_academy()
-elif menu == "📋 Reports":
+elif selected == "📋 탐지 리포트 보관함":
     show_reports()
-elif menu == "📢 Notices":
+elif selected == "🎓 보안 훈련소":
+    show_academy()
+elif selected == "📢 최신 보안 공지":
     show_notices()
