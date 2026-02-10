@@ -190,6 +190,95 @@ def process_voice_analysis(audio_data):
 
 
 def display_result(res, is_voice=False):
+    """분석 결과 시각화: ValueError 해결 및 데이터 매핑 보정 버전"""
+    # [💡 디버깅용] 만약 점수가 계속 안 나오면 아래 주석을 해제해서 데이터 구조를 확인하세요.
+    # st.write("AI 엔진 반환 데이터:", res)
+
+    # 1. 점수 로드 및 100분율 보정
+    risk = res.get("risk_score", 0)
+    if 0 < risk <= 1.0:
+        risk = int(risk * 100)
+
+    color = "#EF4444" if risk >= 60 else "#F59E0B" if risk >= 30 else "#10B981"
+
+    # [🚨 핵심 해결] Plotly가 안전하게 인식하는 RGBA 색상 맵핑
+    rgba_map = {
+        "#EF4444": "rgba(239, 68, 68, 0.3)",  # 고위험 (Red)
+        "#F59E0B": "rgba(245, 158, 11, 0.3)",  # 주의 (Orange)
+        "#10B981": "rgba(16, 185, 129, 0.3)",  # 안전 (Green)
+    }
+    fill_color = rgba_map.get(color, "rgba(0, 0, 0, 0.1)")
+
+    st.markdown("---")
+    st.markdown(
+        f"#### 종합 분석 판정: <span style='color:{color}'>{res.get('verdict', '판정 불가')}</span>",
+        unsafe_allow_html=True,
+    )
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.metric("위험 점수", f"{risk}%")
+        st.info(
+            f"**🕵️ AI 정밀 진단:**\n\n{res.get('ai_analysis', '분석 내용을 불러올 수 없습니다.')}"
+        )
+
+    with col2:
+        # [📊 데이터 매핑 해결] 엔진의 다양한 키 이름을 탐색
+        factors = res.get("factors", {})
+        categories = ["금전유도", "기관사칭", "심리압박", "패턴일치", "블랙리스트"]
+
+        def get_val(key_list):
+            for k in key_list:
+                v = factors.get(k)
+                if v is not None:
+                    return v * 100 if 0 < v <= 1.0 else v
+            return 0
+
+        # AI 엔진의 실제 반환 키에 맞춰 매핑 (필요 시 엔진 코드를 보고 키 이름을 수정하세요)
+        values = [
+            get_val(["content_risk", "financial_risk"]),
+            get_val(["context_risk", "authority_risk"]),
+            get_val(["urgency_risk", "psychological_risk"]),
+            get_val(["pattern_match", "ai_score"]),
+            get_val(["blacklist_match", "db_score"]),
+        ]
+
+        # 레이더 차트 생성 (Fixed logic)
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatterpolar(
+                r=values + [values[0]],
+                theta=categories + [categories[0]],
+                fill="toself",
+                fillcolor=fill_color,  # [✅ 해결] 안전한 rgba 문자열 사용
+                line=dict(color=color),
+                marker=dict(size=1),
+            )
+        )
+
+        fig.update_layout(
+            polar=dict(
+                radialaxis=dict(visible=True, range=[0, 100], gridcolor="#E2E8F0"),
+                angularaxis=dict(gridcolor="#E2E8F0"),
+            ),
+            showlegend=False,
+            height=350,
+            margin=dict(t=40, b=40, l=45, r=45),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # 🚨 고위험군 대응 조치
+    if risk >= 60:
+        st.error("🚨 **즉각적인 대응이 필요합니다!**")
+        c1, c2 = st.columns(2)
+        c1.link_button(
+            "📞 경찰청 신고 (112)", "https://www.police.go.kr", use_container_width=True
+        )
+        c2.link_button(
+            "🏦 금감원 신고 (1332)", "https://fss.or.kr", use_container_width=True
+        )
     """분석 결과 시각화 및 점수 로드 보정"""
     # 1. 전체 데이터 구조 확인 (개발 단계에서 키 이름을 확인하기 위해 주석을 해제하고 확인하세요)
     # st.write("전체 데이터 구조:", res)
