@@ -192,6 +192,9 @@ def process_voice_analysis(audio_data):
 def display_result(res, is_voice=False):
     """분석 결과 시각화 및 경찰청 신고 연동"""
     risk = res.get("risk_score", 0)
+    # 점수가 1 미만(0.95 등)으로 넘어올 경우를 대비해 보정
+    if risk <= 1.0 and risk > 0:
+        risk = int(risk * 100)
     color = "#EF4444" if risk >= 60 else "#F59E0B" if risk >= 30 else "#10B981"
     st.markdown("---")
     st.markdown(
