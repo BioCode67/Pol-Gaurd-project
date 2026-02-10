@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+from .reports import save_report
 import sys
 import os
 
@@ -52,6 +53,7 @@ def show_detector():
                         # st.session_state에 저장된 엔진을 사용하여 직접 분석
                         res = st.session_state.engine.analyze(user_input, url_input)
                         st.session_state["last_res"] = res
+                        save_report(res)
                     except Exception as e:
                         st.error(f"⚠️ 분석 엔진 오류: {e}")
 
