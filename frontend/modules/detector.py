@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 import sys
 import os
 
-# 1. 경로 설정: 프로젝트 루트를 경로에 추가 (ai_engine 임포트용)
+# 1. 경로 설정 (ai_engine 폴더를 인식하게 함)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 if project_root not in sys.path:
@@ -13,28 +13,22 @@ if project_root not in sys.path:
 try:
     from ai_engine.processor import PolGuardProcessor
 except ImportError:
-    st.error(
-        "AI 엔진 모듈(ai_engine.processor)을 찾을 수 없습니다. 폴더 구조를 확인해주세요."
-    )
+    st.error("❌ 시스템 경로 설정 오류: ai_engine 폴더를 찾을 수 없습니다.")
 
 
-# 3. 엔진 초기화 함수 정의 (재사용 가능하도록 분리)
-def initialize_engine():
+# 3. 분석 화면 구성 함수
+def show_detector():
+    # [중요] 세션 상태에 엔진이 없으면 즉시 초기화
     if "engine" not in st.session_state:
         try:
             st.session_state.engine = PolGuardProcessor()
         except Exception as e:
-            st.error(f"AI 엔진 초기화 실패: {e}")
-            return False
-    return True
+            st.error(f"❌ 엔진 초기화 실패: {e}")
+            return
 
-
-def show_detector():
-    # 페이지 진입 시 초기화 시도
-    initialize_engine()
-
+    st.title("🔍 실시간 스미싱 탐지 가디언")
     st.info(
-        "💡 **전문가 팁**: 발신번호가 '010'으로 시작하는 공공기관 문자는 99% 피싱입니다."
+        "💡 **전문가 팁**: 정부기관이나 은행은 절대로 010 번호로 링크를 보내지 않습니다."
     )
 
     col1, col2 = st.columns([1, 1])
@@ -45,37 +39,28 @@ def show_detector():
             "메시지 전문",
             placeholder="수신한 문자의 전체 내용을 복사해 붙여넣으세요...",
             height=200,
-            key="detector_text_input",  # 고유 키 부여로 상태 유지
+            key="input_text",
         )
-        url_input = st.text_input(
-            "🔗 포함된 URL",
-            placeholder="http://으로 시작하는 링크 주소",
-            key="detector_url_input",
-        )
+        url_input = st.text_input("🔗 포함된 URL (선택사항)", placeholder="http://...")
 
-        # 🚀 정밀 분석 시작 버튼
-        if st.button("🚀 정밀 분석 시작"):
-            if not user_input and not url_input:
-                st.warning("내용을 입력해주세요.")
+        if st.button("🚀 정밀 분석 시작", use_container_width=True):
+            if not user_input.strip():
+                st.warning("분석할 텍스트를 입력해주세요.")
             else:
-                # 버튼 클릭 시점에 다시 한번 엔진 존재 확인 (방어적 코드)
-                if initialize_engine():
-                    with st.spinner("AI 가디언이 다차원 분석을 수행 중입니다..."):
-                        try:
-                            # st.session_state.engine이 확실히 존재하는 상태에서 실행
-                            res = st.session_state.engine.analyze(user_input, url_input)
-                            st.session_state["last_res"] = res
-                        except Exception as e:
-                            st.error(f"AI 분석 중 오류 발생: {e}")
-                else:
-                    st.error("엔진이 초기화되지 않아 분석을 시작할 수 없습니다.")
+                with st.spinner("Llama-3.3 엔진이 다차원 분석을 수행 중입니다..."):
+                    try:
+                        # st.session_state에 저장된 엔진을 사용하여 직접 분석
+                        res = st.session_state.engine.analyze(user_input, url_input)
+                        st.session_state["last_res"] = res
+                    except Exception as e:
+                        st.error(f"⚠️ 분석 엔진 오류: {e}")
 
     with col2:
         if "last_res" in st.session_state:
             res = st.session_state["last_res"]
             f = res.get("factors", {})
 
-            # 전문가용 레이더 차트 (5대 핵심 지표)
+            # 전문가용 레이더 차트 구성
             categories = [
                 "금전유도",
                 "기관사칭",
@@ -97,39 +82,43 @@ def show_detector():
                     r=values + [values[0]],
                     theta=categories + [categories[0]],
                     fill="toself",
-                    line_color="#002244",
-                    fillcolor="rgba(0, 34, 68, 0.3)",
+                    line_color="#FF4B4B",
+                    fillcolor="rgba(255, 75, 75, 0.3)",
                 )
             )
             fig.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0, 1.2])),
+                polar=dict(radialaxis=dict(visible=True, range=[0, 1])),
                 margin=dict(l=40, r=40, t=20, b=20),
             )
             st.plotly_chart(fig, use_container_width=True)
 
-    # 하단 전문 판정 리포트
+    # 하단 판정 결과 리포트
     if "last_res" in st.session_state:
         res = st.session_state["last_res"]
         st.markdown("---")
+
+        # 위험도에 따른 색상 결정
+        risk = res.get("risk_score", 0)
+        color = "red" if risk >= 60 else "orange" if risk >= 30 else "green"
+
         st.markdown(
-            f"### 📑 AI 종합 판정 리포트: **{res.get('verdict', '판정 불가')}**"
+            f"### 📑 AI 종합 판정 리포트: :{color}[{res.get('verdict', '분석 중')}]"
         )
 
         c1, c2, c3 = st.columns(3)
-        c1.metric("종합 위험도", f"{res.get('risk_score', 0)}%")
-        c2.metric(
-            "사칭 가능성", "매우 높음" if f.get("context_risk", 0) > 0.7 else "낮음"
-        )
-        c3.metric("데이터 신뢰도", "Groq Llama-3 AI 분석")
+        c1.metric("종합 위험도", f"{risk}%")
+        c2.metric("위험 유형", res.get("intent", "기타"))
+        c3.metric("데이터 엔진", "Llama-3.3 70B")
 
         if "ai_analysis" in res:
-            st.info(f"🔍 **AI 분석 근거**: {res['ai_analysis']}")
+            st.warning(f"**🕵️ 분석 근거:** {res['ai_analysis']}")
 
-        with st.expander("📝 보안 전문가 권고 사항 확인"):
-            risk_score = res.get("risk_score", 0)
-            if risk_score > 60:
+        with st.expander("📝 대응 가이드라인 (보안 전문가 제언)"):
+            if risk >= 60:
                 st.error(
-                    "1. 절대 링크를 누르지 말고 해당 번호를 차단하세요.\n2. 이미 클릭했다면 비행기 모드를 켜고 악성 앱 검사를 수행하세요."
+                    "🚨 **즉시 대응 필요**\n- 해당 번호를 스팸으로 신고 및 차단하십시오.\n- 링크를 클릭했다면 스마트폰 백신을 돌리고 '시티즌코난' 앱을 실행하세요."
                 )
             else:
-                st.success("알려진 위협은 없으나 주의가 필요합니다.")
+                st.success(
+                    "✅ **주의 사항**\n- 현재로서는 큰 위협이 발견되지 않았습니다.\n- 하지만 모르는 번호의 링크는 항상 의심하는 습관이 중요합니다."
+                )
