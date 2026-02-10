@@ -8,41 +8,84 @@ from modules.academy import show_academy
 from modules.reports import show_reports
 from modules.notices import show_notices
 
-# 1. 페이지 설정
+# 1. 페이지 설정 및 전문적인 테마 적용
 st.set_page_config(
-    page_title="Pol-Guard | AI 피싱 통합 관제", layout="wide", page_icon="🛡️"
+    page_title="Pol-Guard AI 피싱 대응 플랫폼", page_icon="🛡️", layout="wide"
 )
 
-# 2. 전역 스타일링 (모든 페이지 공통 적용)
+# 2. 커스텀 CSS (전문 웹사이트 스타일링)
 st.markdown(
     """
     <style>
-    .stApp { background-color: #ffffff; }
-    .hero-section {
-        background: linear-gradient(135deg, #002244 0%, #004080 100%);
-        padding: 50px 20px; border-radius: 20px; color: white; text-align: center; margin-bottom: 30px;
+    /* 전체 배경색 및 폰트 */
+    .main {
+        background-color: #f8f9fa;
     }
-    .hero-title { font-size: 2.8rem; font-weight: 800; }
-    .hero-subtitle { font-size: 1.1rem; opacity: 0.9; }
+    
+    /* 헤더 스타일링 */
+    .stHeader {
+        background-color: #002D5D;
+    }
+    
+    /* 사이드바 스타일링 */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff;
+        border-right: 1px solid #e0e0e0;
+    }
+    
+    /* 버튼 스타일 (전문적인 블루 톤) */
+    .stButton>button {
+        width: 100%;
+        border-radius: 8px;
+        height: 3em;
+        background-color: #0056b3;
+        color: white;
+        border: none;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        background-color: #003d80;
+        border: none;
+        color: white;
+    }
+    
+    /* 카드형 컨테이너 스타일 */
+    div.stBlock {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid #f0f0f0;
+        margin-bottom: 20px;
+    }
+    
+    /* 탭 메뉴 스타일 */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 24px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        white-space: pre-wrap;
+        font-weight: bold;
+        font-size: 16px;
+    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# 3. 사이드바 내비게이션
+# 3. 사이드바 메뉴 (더 깔끔하게 구성)
 with st.sidebar:
-    st.image("https://www.police.go.kr/static/portal/img/common/logo.png", width=150)
-    st.markdown("### **서비스 메뉴**")
-    menu = st.selectbox(
-        "이동할 기능을 선택하세요",
-        [
-            "🏠 메인 탐지기",
-            "🎓 Pol-Academy",
-            "📋 탐지 리포트 보관함",
-            "📢 최신 보안 공지",
-        ],
+    st.image("https://img.icons8.com/fluency/96/shield.png", width=80)
+    st.title("Pol-Guard")
+    st.markdown("---")
+    menu = st.radio(
+        "서비스 메뉴",
+        ["🏠 메인 탐지기", "📊 분석 대시보드", "🎓 보안 아카데미", "📢 공지사항"],
+        index=0,
     )
-    st.write("---")
+    st.markdown("---")
     st.caption("© 2026 Pol-Guard Project")
 
 # 4. 공통 배너 출력
