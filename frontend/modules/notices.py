@@ -66,7 +66,7 @@ def show_notices():
             unsafe_allow_html=True,
         )
         # 경찰청 공식 홍보 영상 등 관련 URL로 교체 가능
-        st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        st.video("https://youtu.be/nYLGDNQAjWQ?si=rk6xmO0-O4P3vIjS")
 
     with v_col2:
         st.markdown(
@@ -77,7 +77,7 @@ def show_notices():
         """,
             unsafe_allow_html=True,
         )
-        st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        st.video("https://youtu.be/TOd3QEFfl34?si=EegZfWzXfZ_Ee4mJ")
 
     st.markdown("---")
 
