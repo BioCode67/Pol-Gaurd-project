@@ -1,44 +1,38 @@
 import streamlit as st
 import time
-from io import BytesIO
-
-# PDF 생성을 위한 라이브러리 (requirements.txt에 fpdf2 필요)
-try:
-    from fpdf import FPDF
-
-    PDF_AVAILABLE = True
-except ImportError:
-    PDF_AVAILABLE = False
 
 
 def show_ai_agent():
+    # 상단 헤더 문구
     st.markdown("### 🤖 피싱 대응 AI 에이전트 (Pol-Coach)")
     st.write("보이스피싱 전문 수사관 AI가 당신의 상황을 실시간으로 정밀 진단합니다.")
 
-    # 1. 채팅 데이터 초기화
+    # 1. 채팅 데이터 초기화 (사용자 및 AI 대화 기록 보존)
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # 2. 바로 물어보기 (버튼 색상 연하게 조정)
+    # 2. 버튼 스타일 최적화 (연한 블루 톤 및 Amara 테마 적용)
     st.markdown(
         """
         <style>
-        div.stButton > button:first-child {
+        div.stButton > button {
             background: #EFF6FF !important; /* 연한 블루 배경 */
             color: #1E40AF !important;    /* 짙은 블루 텍스트 */
             border: 1px solid #DBEAFE !important;
-            box-shadow: none !important;
-            height: auto !important;
-            padding: 10px !important;
+            border-radius: 12px !important;
+            font-weight: 600 !important;
+            transition: 0.3s all !important;
         }
         div.stButton > button:hover {
             background: #DBEAFE !important;
+            border-color: #BFDBFE !important;
         }
         </style>
     """,
         unsafe_allow_html=True,
     )
 
+    # 3. 바로 물어보기 (긴급 상황 키워드 버튼)
     st.markdown("#### 💡 긴급 상황 키워드 진단")
     c1, c2, c3 = st.columns(3)
     if c1.button("📱 모르는 번호 미끼 문자"):
@@ -56,37 +50,38 @@ def show_ai_agent():
 
     st.markdown("---")
 
-    # 3. 채팅 이력 표시 (사용자 질문 -> AI 답변 순서 유지)
+    # 4. 채팅 인터페이스 (사용자 대화 노출 및 AI 답변 표시)
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # 4. 사용자 입력 처리
+    # 5. 사용자 채팅 입력창
     if prompt := st.chat_input("의심되는 상황을 상세히 말씀해 주세요..."):
         process_message(prompt)
 
-    # 5. 리포트 다운로드 섹션
+    # 6. 디지털 증거 가디언 리포트 (한글 깨짐 없는 TXT 다운로드)
     if st.session_state.messages:
         st.markdown("---")
         st.subheader("📄 디지털 증거 가디언 리포트")
-        if PDF_AVAILABLE:
-            pdf_data = generate_pdf_report(st.session_state.messages)
-            st.download_button(
-                label="📥 상담 내역 증거 리포트(PDF) 다운로드",
-                data=pdf_data,
-                file_name=f"PolGuard_Evidence_{time.strftime('%Y%m%d')}.pdf",
-                mime="application/pdf",
-                use_container_width=True,
-            )
+        st.write("상담 내용을 기반으로 경찰 신고용 증거 리포트를 생성합니다.")
+
+        report_data = generate_text_report(st.session_state.messages)
+
+        st.download_button(
+            label="📥 증거 리포트(.txt) 즉시 다운로드",
+            data=report_data,
+            file_name=f"PolGuard_Report_{time.strftime('%Y%m%d_%H%M')}.txt",
+            mime="text/plain",
+            use_container_width=True,
+        )
 
 
 def process_message(text):
-    """사용자 질문을 먼저 띄우고 AI가 전문적인 답변을 하도록 처리"""
-    # [🚨 해결 2] 사용자 메시지 즉시 저장
+    """사용자 질문을 먼저 저장하고 전문 수사관 답변을 생성합니다."""
+    # 사용자 질문 저장 (리스트에 추가하여 대화창에 노출)
     st.session_state.messages.append({"role": "user", "content": text})
 
-    # [🚨 해결 3] 보이스피싱 전문 담당 형사 페르소나 강화 답변
-    full_response = ""
+    # 전문 수사관 페르소나 답변 생성
     if "검찰" in text or "수사" in text or "명의" in text:
         full_response = (
             "🚨 **긴급 상황 알림: 경찰청 사이버수사팀입니다.**\n\n"
@@ -118,12 +113,20 @@ def process_message(text):
     st.rerun()
 
 
-def generate_pdf_report(messages):
-    """PDF 생성 로직 (생략 - 이전과 동일)"""
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Pol-Guard Evidence Report", ln=True, align="C")
-    for m in messages:
-        pdf.multi_cell(0, 10, txt=f"{m['role'].upper()}: {m['content']}")
-    return pdf.output(dest="S").encode("latin-1", "ignore")
+def generate_text_report(messages):
+    """상담 내역을 한글 깨짐 없는 텍스트 파일로 변환"""
+    report = "=== Pol-Guard Digital Evidence Report ===\n"
+    report += f"발행 일시: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+    report += "피싱·스캠으로부터 안전한 나라, 경찰청과 Pol-Guard가 함께 만듭니다.\n"
+    report += "------------------------------------------\n\n"
+
+    for msg in messages:
+        role = "사용자(USER)" if msg["role"] == "user" else "AI 수사관(AGENT)"
+        # 마크다운 문법(**) 제거 후 텍스트 저장
+        content = msg["content"].replace("**", "")
+        report += f"[{role}]\n{content}\n\n"
+
+    report += "------------------------------------------\n"
+    report += "본 리포트는 Pol-Guard AI에 의해 생성된 상담 증거물입니다.\n"
+
+    return report.encode("utf-8")  # UTF-8 인코딩으로 한글 깨짐 방지
