@@ -1,87 +1,61 @@
-import pandas as pd
 import os
+import streamlit as st
+from groq import Groq
+import json
 from typing import Optional
 
 
-# 백엔드 서버 실행 uvicorn app.main:app --reload --port 8000
 class PolGuardProcessor:
     def __init__(self, blacklist_path="data/blacklist.csv"):
-        # 가중치 상향 조정
-        self.weights = {"content": 0.5, "context": 0.4, "urgency": 0.3}
-        self.alpha = 2.0  # 패턴 가중치 강화
-        self.beta = 5.0  # 블랙리스트 가중치 대폭 강화 (걸리면 바로 고위험)
+        # API Key는 Streamlit Cloud 설정에서 관리하는 것이 보안상 좋습니다.
+        # 로컬 테스트용으로 여기에 직접 넣거나 환경변수를 쓰세요.
+        api_key = st.secrets["GROQ_API_KEY"]
+        self.client = Groq(api_key)
         self.blacklist_path = blacklist_path
-        self.blacklist = []
-        self._load_blacklist()
-
-    def _load_blacklist(self):
-        if os.path.exists(self.blacklist_path):
-            try:
-                # 인코딩 문제 방지
-                df = pd.read_csv(self.blacklist_path)
-                if "url" in df.columns:
-                    self.blacklist = df["url"].astype(str).tolist()
-            except Exception as e:
-                print(f"블랙리스트 로드 실패: {e}")
-                self.blacklist = []
 
     def analyze(self, text: str, url: Optional[str] = None) -> dict:
-        # 텍스트가 None일 경우 빈 문자열로 처리 (에러 방지)
-        if text is None:
-            text = ""
+        if not text:
+            return {"risk_score": 0, "verdict": "데이터 없음"}
 
-        # 1. Ci 계산
-        context_val = (
-            1.0
-            if any(w in text for w in ["검찰", "경찰", "지방지검", "국세청", "법원"])
-            else 0.1
-        )
-        content_val = (
-            1.0
-            if any(w in text for w in ["입금", "송금", "계좌", "카드결제", "대출상담"])
-            else 0.1
-        )
-        urgency_val = (
-            1.0
-            if any(w in text for w in ["즉시", "금일 마감", "구속", "정지 예정"])
-            else 0.2
-        )
+        # AI에게 부여하는 '전문가 페르소나'와 '분석 지침'
+        prompt = f"""
+        당신은 대한민국 경찰청 산하 사이버 수사대의 AI 수사관입니다.
+        다음 메시지를 분석하여 스캠(사기) 또는 피싱 여부를 판별하세요.
+        특히 '아빠, 나 급해' 같은 사회공학적 기법(Social Engineering)을 중점적으로 보십시오.
 
-        c_scores = {
-            "content": content_val,
-            "context": context_val,
-            "urgency": urgency_val,
-        }
-        sum_ci = sum(self.weights[k] * c_scores[k] for k in self.weights)
+        메시지 내용: "{text}"
 
-        # 2. P (패턴) & B (블랙리스트)
-        is_suspicious_pattern = "http" in text and any(
-            x in text for x in ["bit.ly", "t.ly", "nuly.do", "c11.kr"]
-        )
-        p_factor = 1.5 if is_suspicious_pattern else 0.2
+        결과는 반드시 다음 JSON 형식으로만 출력하세요:
+        {{
+            "risk_score": 0~100 사이 정수,
+            "intent": "의도 분류(예: 지인사칭, 기관사칭, 일반 등)",
+            "reason": "왜 그렇게 판단했는지 한국어로 짧게 설명"
+        }}
+        """
 
-        # 블랙리스트 대조 강화
-        b_factor = 1.0 if url and any(url in b for b in self.blacklist) else 0.0
+        try:
+            # Groq Llama 3를 이용한 초고속 추론
+            chat_completion = self.client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama3-8b-8192",  # 혹은 llama3-70b-8192
+                response_format={"type": "json_object"},  # JSON 응답 강제
+            )
 
-        # 3. 공식 적용 (상수 조정으로 점수 민감도 향상)
-        # 블랙리스트에 있으면 무조건 높은 점수가 나오도록 설계
-        r_score = sum_ci + (self.alpha * p_factor) + (self.beta * b_factor)
+            ai_res = json.loads(chat_completion.choices[0].message.content)
+            score = ai_res["risk_score"]
 
-        # 정규화 로직 변경: 기준치를 50점으로 하향하거나 승수를 조정
-        normalized = min(round(r_score * 15, 2), 100.0)
-
-        # 블랙리스트 직행 티켓 (강력 추천)
-        if b_factor > 0:
-            normalized = 100.0
-
-        return {
-            "risk_score": normalized,
-            "verdict": "🚨 고위험 (피싱 의심)" if normalized >= 50 else "✅ 안전함",
-            "factors": {
-                "content_risk": round(content_val, 2),
-                "context_risk": round(context_val, 2),
-                "urgency_risk": round(urgency_val, 2),
-                "pattern_match": p_factor,
-                "blacklist_match": b_factor,
-            },
-        }
+            return {
+                "risk_score": score,
+                "verdict": "🚨 고위험 (피싱 의심)" if score >= 60 else "✅ 안전함",
+                "ai_analysis": ai_res["reason"],
+                "intent": ai_res["intent"],
+                "factors": {
+                    "content_risk": score / 100,
+                    "context_risk": 0.8 if ai_res["intent"] != "일반" else 0.1,
+                    "urgency_risk": 0.9 if "급해" in text else 0.2,
+                    "pattern_match": 1.0 if url else 0.2,
+                    "blacklist_match": 0.0,  # 필요시 기존 블랙리스트 로직 추가 가능
+                },
+            }
+        except Exception as e:
+            return {"risk_score": 50, "verdict": "AI 분석 오류", "ai_analysis": str(e)}
