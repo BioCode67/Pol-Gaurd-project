@@ -55,9 +55,7 @@ def show_detector():
     with tab2:
         st.markdown("### 📥 통화 녹음 파일 분석")
         audio_file = st.file_uploader(
-            audio_file=st.file_uploader(
-                "파일 업로드 (mp3, wav, m4a, mp4)", type=["mp3", "wav", "m4a", "mp4"]
-            )
+            "파일 업로드 (mp3, wav, m4a, mp4)", type=["mp3", "wav", "m4a", "mp4"]
         )
 
         if audio_file is not None:
