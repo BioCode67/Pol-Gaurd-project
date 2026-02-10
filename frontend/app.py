@@ -13,62 +13,54 @@ st.set_page_config(
     page_title="Pol-Guard AI 피싱 대응 플랫폼", page_icon="🛡️", layout="wide"
 )
 
-# 2. 커스텀 CSS (전문 웹사이트 스타일링)
 st.markdown(
     """
     <style>
-    /* 전체 배경색 및 폰트 */
-    .main {
-        background-color: #f8f9fa;
+    /* 1. 전체 배경색 (어두운 네이비 그레이) */
+    .stApp {
+        background-color: #0d1117;
+        color: #e6edf3;
     }
     
-    /* 헤더 스타일링 */
-    .stHeader {
-        background-color: #002D5D;
-    }
-    
-    /* 사이드바 스타일링 */
+    /* 2. 사이드바 스타일 (더 어둡게) */
     [data-testid="stSidebar"] {
-        background-color: #ffffff;
-        border-right: 1px solid #e0e0e0;
+        background-color: #010409;
+        border-right: 1px solid #30363d;
     }
     
-    /* 버튼 스타일 (전문적인 블루 톤) */
-    .stButton>button {
-        width: 100%;
-        border-radius: 8px;
-        height: 3em;
-        background-color: #0056b3;
-        color: white;
-        border: none;
-        font-weight: bold;
-        transition: 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #003d80;
-        border: none;
-        color: white;
+    /* 3. 카드형 컨테이너 (배경보다 약간 밝은 색으로 입체감 부여) */
+    div.stBlock, div.stExpander, .stTabs [data-baseweb="tab-panel"] {
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        margin-bottom: 20px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     
-    /* 카드형 컨테이너 스타일 */
-    div.stBlock {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        border: 1px solid #f0f0f0;
-        margin-bottom: 20px;
+    /* 4. 텍스트 입력창 및 텍스트 영역 */
+    .stTextArea textarea, .stTextInput input {
+        background-color: #0d1117 !important;
+        color: #e6edf3 !important;
+        border: 1px solid #30363d !important;
     }
     
-    /* 탭 메뉴 스타일 */
+    /* 5. 탭 메뉴 디자인 */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
+        background-color: transparent;
     }
     .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
+        color: #8b949e;
+    }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] {
+        color: #58a6ff;
+        border-bottom-color: #58a6ff;
+    }
+
+    /* 6. 메트릭(숫자) 스타일 */
+    [data-testid="stMetricValue"] {
+        color: #58a6ff !important;
         font-weight: bold;
-        font-size: 16px;
     }
     </style>
     """,
