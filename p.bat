@@ -1,28 +1,22 @@
 @echo off
-:: 한글 깨짐 방지를 위한 설정
 chcp 65001 > nul
 
 echo ========================================
-echo 🚀 Pol-Guard 자동 업로드 시작
+echo 🚀 Pol-Guard 강제 동기화 및 업로드 시작
 echo ========================================
 
-:: 1. 변경된 파일 스테이징
 git add .
-
-:: 2. 커밋 메시지 입력받기
 set /p msg="📝 커밋 메시지를 입력하세요 (미입력 시 'update'): "
-
-:: 3. 메시지가 비어있으면 update로 설정
 if "%msg%"=="" (
     set msg=update
 )
 
-:: 4. 커밋 및 푸시 실행
 git commit -m "%msg%"
-git push origin main
+:: --force를 붙여서 서버 기록을 내 컴퓨터 기록으로 덮어씌웁니다.
+git push origin main --force
 
 echo.
 echo ========================================
-echo ✅ GitHub 업로드 완료! (김주형 님 수고하셨습니다)
+echo ✅ 강제 업로드 완료! 이제 사이트를 확인하세요.
 echo ========================================
 pause
